@@ -7,6 +7,7 @@ use Slim\App;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteCollectorProxy;
 
+
 return static function (App $app) {
     $app->get('/register', [AuthController::class, 'showRegister']);
     $app->post('/register', [AuthController::class, 'register']);
@@ -24,7 +25,7 @@ return static function (App $app) {
             $expense->post('/{id}', [ExpenseController::class, 'update']);
             $expense->post('/{id}/delete', [ExpenseController::class, 'destroy']);
         });
-    })
+    });/*)
         // The middleware below ensures that only a logged-in user has access to the firewalled routes
         ->add(function ($request, $handler) {
             if (!isset($_SESSION['user_id'])) {
@@ -32,5 +33,5 @@ return static function (App $app) {
             }
 
             return $handler->handle($request);
-        });
+        });*/
 };

@@ -9,28 +9,92 @@ use App\Domain\Repository\UserRepositoryInterface;
 
 class AuthService
 {
+
+    private const MIN_USERNAME_LENGHT = 4;
+    private const MIN_PASSWORD_LENGTH = 8;
     public function __construct(
         private readonly UserRepositoryInterface $users,
     ) {}
 
-    public function register(string $username, string $password): User
+    public function registerNewUser(string $username, string $password, string $passwordConfirm): array
     {
-        // TODO: check that a user with same username does not exist, create new user and persist
-        // TODO: make sure password is not stored in plain, and proper PHP functions are used for that
+        $errorsValidation = $this -> validateInputForRegistration($username, $password, $passwordConfirm);
+        if(!empty($errorsValidation))
+        {
+            return ['success' => false, 'errors' => $errorsValidation];
+        }
+        if ($this->usernameThatAlreadyExists($username))
+        {
+            return ['success' => false, 'errors' => ['username' => 'This username is already taken. Please choose another.']];
+        }
 
-        // TODO: here is a sample code to start with
-        $user = new User(null, $username, $password, new \DateTimeImmutable());
-        $this->users->save($user);
-
-        return $user;
+        $newUser = $this->createUserWithAHashedPassword($username, $password);
+        $this->users->save($newUser);
+        return ['success' => true,'user' => $newUser];
     }
 
-    public function attempt(string $username, string $password): bool
+    public function attemptLogin(string $username, string $password): bool
     {
-        // TODO: implement this for authenticating the user
-        // TODO: make sur ethe user exists and the password matches
-        // TODO: don't forget to store in session user data needed afterwards
-
+        $user = $this->users->findByUsername($username);
+         if($user == null || !password_verify($password, $user->passwordHash))
+         {
+             return false;
+         }
+         $this->startSecureUserSession($user);
         return true;
     }
+    private function usernameThatAlreadyExists(string $username): bool
+    {
+        return $this->users->findByUsername($username) !== null;
+    }
+    private function validateInputForRegistration(string $username, string $password, string $passwordConfirm) : array
+    {
+        $errors = [];
+        if(strlen($username) < self::MIN_USERNAME_LENGHT)
+        {
+            $errors['username'] = sprintf('Your username has to be at least %d characters long', self::MIN_USERNAME_LENGHT);
+        }
+        if(strlen($password) < self::MIN_PASSWORD_LENGTH)
+        {
+            $errors['password'] = sprintf('Your password has to be at least %d characters long', self::MIN_PASSWORD_LENGTH);
+        }
+        if(!preg_match('/[0-9]/', $password))
+        {
+            $errors['password'] = 'Password must contain at least 1 number';
+        }
+        if($password !== $passwordConfirm)
+        {
+            $errors['password'] = 'Password do not match';
+        }
+
+        return $errors;
+    }
+    private function createUserWithAHashedPassword(string $username, string $password):User
+    {
+        return new User(
+            null,
+            $username,
+            password_hash($password, PASSWORD_DEFAULT),
+            new \DateTimeImmutable()
+        );
+    }
+    private function startSecureUserSession(User $user) : void
+    {
+        $this->startSessionIfNeeded();
+        $this->regenerateSessionIdForSecurity();
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->username;
+    }
+
+    private function startSessionIfNeeded(): void
+    {
+        if(session_status() === PHP_SESSION_NONE){
+            session_start();
+        }
+    }
+    private function regenerateSessionIdForSecurity(): void
+    {
+        session_regenerate_id(true);
+    }
+
 }

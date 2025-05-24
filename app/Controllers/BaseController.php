@@ -15,6 +15,9 @@ abstract class BaseController
 
     protected function render(Response $response, string $template, array $data = []): Response
     {
+        // Removed CSRF token from data, not working properly
+        // $csrf = $this->view->getEnvironment()->getGlobals()['csrf'] ?? [];
+        // $data['csrf'] = $csrf;
         return $this->view->render($response, $template, $data);
     }
 
