@@ -29,7 +29,6 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
         if (false === $data) {
             return null;
         }
-
         return $this->createExpenseFromData($data);
     }
 

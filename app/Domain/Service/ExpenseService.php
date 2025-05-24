@@ -8,6 +8,7 @@ use App\Domain\Entity\Expense;
 use App\Domain\Entity\User;
 use App\Domain\Repository\ExpenseRepositoryInterface;
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
 class ExpenseService
@@ -16,23 +17,45 @@ class ExpenseService
         private readonly ExpenseRepositoryInterface $expenses,
     ) {}
 
-    public function list(User $user, int $year, int $month, int $pageNumber, int $pageSize): array
+    public function list(int $userId, int $year, int $month, int $pageNumber, int $pageSize): array
     {
-        // TODO: implement this and call from controller to obtain paginated list of expenses
-        return [];
+        $criteria = [
+            'user_id' => $userId->id,
+            'year' => $year,
+            'month' => $month,
+        ];
+        return $this->expenses->findBy($criteria, ($pageNumber - 1)* $pageSize, $pageSize);
+    }
+
+    public function countForUser(int $userId, int $year, int $month): int
+    {
+        return $this->expenses->countBy([
+            'user_id' => $userId,
+                'year' => $year,
+                'month' => $month,
+            ]);
+    }
+
+    public function getAvailableYears(int $userId):array
+    {
+        return $this->expenses->listExpenditureYears($userId);
+    }
+
+    public function findById(int $id): ?Expense
+    {
+        return $this->expenses->find($id);
     }
 
     public function create(
-        User $user,
+        int $userId,
         float $amount,
         string $description,
         DateTimeImmutable $date,
         string $category,
     ): void {
-        // TODO: implement this to create a new expense entity, perform validation, and persist
+        $this->validateExpenseData($amount, $description, $date, $category);
 
-        // TODO: here is a code sample to start with
-        $expense = new Expense(null, $user->id, $date, $category, (int)$amount, $description);
+        $expense = new Expense(null, $userId, $date, $category, (int)($amount * 100), $description);
         $this->expenses->save($expense);
     }
 
@@ -43,9 +66,42 @@ class ExpenseService
         DateTimeImmutable $date,
         string $category,
     ): void {
-        // TODO: implement this to update expense entity, perform validation, and persist
+        $this->validateExpenseData($amount, $description, $date, $category);
+
+        $expense->date = $date;
+        $expense->category = $category;
+        $expense->amountCents = (int)($amount * 100);
+        $expense->description = $description;
+
+        $this->expenses->save($expense);
+    }
+    public function delete(int $id): void
+    {
+        $this->expenses->delete($id);
     }
 
+    private function validateExpenseData(
+        float $amount,
+        string $description,
+        DateTimeImmutable $date,
+        string $category
+    ): void {
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('Amount must be greater than 0');
+        }
+
+        if (empty($description)) {
+            throw new InvalidArgumentException('Description cannot be empty');
+        }
+
+        if ($date > new DateTimeImmutable()) {
+            throw new InvalidArgumentException('Date cannot be in the future');
+        }
+
+        if (empty($category)) {
+            throw new InvalidArgumentException('Category must be selected');
+        }
+    }
     public function importFromCsv(User $user, UploadedFileInterface $csvFile): int
     {
         // TODO: process rows in file stream, create and persist entities
