@@ -13,6 +13,12 @@ use Psr\Http\Message\UploadedFileInterface;
 
 class ExpenseService
 {
+    private const DEFAULT_CATEGORIES = [
+        'groceries', 'utilities',
+        'transport', 'entertainment',
+        'housing', 'health', 'other'
+    ];
+
     public function __construct(
         private readonly ExpenseRepositoryInterface $expenses,
     ) {}
@@ -20,7 +26,7 @@ class ExpenseService
     public function list(int $userId, int $year, int $month, int $pageNumber, int $pageSize): array
     {
         $criteria = [
-            'user_id' => $userId->id,
+            'user_id' => $userId,
             'year' => $year,
             'month' => $month,
         ];
@@ -99,14 +105,12 @@ class ExpenseService
         }
 
         if (empty($category)) {
-            throw new InvalidArgumentException('Category must be selected');
+            throw new InvalidArgumentException('Please select a valid category');
         }
     }
-    public function importFromCsv(User $user, UploadedFileInterface $csvFile): int
+    public function importFromCsv(int $userId, UploadedFileInterface $csvFile): int
     {
-        // TODO: process rows in file stream, create and persist entities
-        // TODO: for extra points wrap the whole import in a transaction and rollback only in case writing to DB fails
-
-        return 0; // number of imported rows
+         return 0;
     }
+
 }

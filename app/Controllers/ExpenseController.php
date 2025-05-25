@@ -26,7 +26,6 @@ class ExpenseController extends BaseController
 
     public function index(Request $request, Response $response): Response
     {
-
         $userId = (int)$_SESSION['user_id'];
         $queryParameters = $request->getQueryParams();
 
@@ -71,6 +70,7 @@ class ExpenseController extends BaseController
                 $formData['category'],
             );
 
+            $this->addFlashMessage('success', 'Expense added successfully');
             return $response
                 ->withHeader('Location', '/expenses')
                 ->withStatus(302);
@@ -148,4 +148,5 @@ class ExpenseController extends BaseController
             ->withHeader('Location', '/expenses')
             ->withStatus(302);
     }
+
 }

@@ -21,4 +21,8 @@ CREATE TABLE IF NOT EXISTS expenses
         ON DELETE CASCADE
 );
 
+CREATE INDEX idx_expenses_user_id ON expenses (user_id);
+CREATE INDEX idx_expenses_date ON expenses (date);
+CREATE INDEX idx_expenses_category ON expenses (category);
+
 -- Any further schema changes or additions go to separate files: migration_1.sql, migration_2.sql, ...
