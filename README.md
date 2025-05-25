@@ -104,10 +104,13 @@ A solution with passing analysis and unit tests will receive extra points.
 ## Delivery details
 
 Participant:
-- Full name: ...
-- Email address: ...
+- Full name: Ugran Radu-Andrei
+- Email address: ugranradu@gmail.com
 
 Features fully implemented:
-- ...
+- Register, login, logout are working
+- Expenses List, Edit, Delete
+- Dashboard with warnings
+- importing the csv file
 
 Other instructions about setting up the application (if any): ...
