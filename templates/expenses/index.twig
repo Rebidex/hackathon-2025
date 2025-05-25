@@ -114,13 +114,20 @@
 
     <section class="mb-8">
         <h2 class="text-xl font-bold mb-4">Import expenses from CSV</h2>
-            <label for="csvFile" class="text-gray-300 text-sm font-bold">CSV File</label>
-            <input type="file" id="csv" name="csv" accept=".csv" required
-                   class="shadow appearance-none border rounded py-2 px-3 text-gray-500 leading-tight focus:outline-none focus:shadow-outline">
-            <button type="submit"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Import
-            </button>
-        </form>
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <form action="/expenses/import" method="POST" enctype="multipart/form-data" class="flex gap-4 items-center">
+                <div class="flex-1">
+                    <label for="csv" class="block text-gray-300 text-sm font-bold mb-2">CSV File</label>
+                    <input type="file" id="csv" name="csv" accept=".csv" required
+                           class="w-full shadow appearance-none border rounded py-2 px-3 text-gray-500 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="self-end">
+                    <button type="submit"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Import
+                    </button>
+                </div>
+            </form>
+        </div>
     </section>
 {% endblock %}

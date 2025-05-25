@@ -148,5 +148,45 @@ class ExpenseController extends BaseController
             ->withHeader('Location', '/expenses')
             ->withStatus(302);
     }
+    public function import(Request $request, Response $response): Response
+    {
+        $userId = (int)$_SESSION['user_id'];
+        $uploadedFiles = $request->getUploadedFiles();
+        $csvFile = $uploadedFiles['csv'] ?? null;
+
+        if(!$csvFile || $csvFile->getError() !== UPLOAD_ERR_OK)
+        {
+            $this->addFlashMessage('error', 'Please upload a valid CSV file');
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        }
+
+        $fileName = $csvFile->getClientFilename();
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        if ($fileExtension !== 'csv') {
+            $this->addFlashMessage('error', 'Please upload a CSV file');
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        }
+
+        try{
+            $importResult = $this->expenseService->importFromCsv($userId, $csvFile);
+
+            if ($importResult['imported'] > 0) {
+                $this->addFlashMessage('success',
+                    sprintf('Successfully imported %d expenses. %d rows skipped.',
+                        $importResult['imported'],
+                        $importResult['skipped'])
+                );
+            } else {
+                $this->addFlashMessage('warning',
+                    sprintf('No expenses were imported. %d rows skipped. Please check your CSV format.',
+                        $importResult['skipped'])
+                );
+            }
+        } catch(\InvalidArgumentException $e) {
+            $this->addFlashMessage('error', $e->getMessage());
+        }
+        return $response->withHeader('Location', '/expenses')->withStatus(302);
+    }
 
 }

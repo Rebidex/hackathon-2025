@@ -33,9 +33,8 @@ class AlertGenerator
 
         foreach ($this->categoryBudgets as $category => $budget) {
             $overAmount = 0;
-
+            $spent = 0;
             foreach ($categoryTotals as $categoryData) {
-                $spent = 0;
                 if ($categoryData['category'] === $category) {
                     $spent = $categoryData['value'];
                     break;
