@@ -166,22 +166,106 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
         return $years;
     }
 
+    public function getAvailableYears(int $userId): array
+    {
+        return $this->listExpenditureYears($userId);
+    }
+
     public function sumAmountsByCategory(array $criteria): array
     {
-        // TODO: Implement sumAmountsByCategory() method.
-        return [];
+        $where = [];
+        $parameters = [];
+        foreach ($criteria as $key => $value) {
+            if($key === 'year'){
+                $where[]= 'strftime("%Y", date) = :year';
+                $parameters['year'] =(string) $value;
+            }elseif($key === 'month'){
+                $monthPadded = str_pad((string)$value, 2, '0', STR_PAD_LEFT);
+                $where[]= 'strftime("%m", date) = :month';
+                $parameters['month'] = $monthPadded;;
+            }else {
+                $where[]= "$key = :$key";
+                $parameters[$key] = $value;
+            }
+        }
+        $query = 'SELECT category, SUM(amount_cents) AS total_value FROM expenses';
+        if(!empty($where)){
+            $query .= ' WHERE '.implode(' AND ', $where);
+        }
+        $query .= ' GROUP BY category ORDER BY total_value DESC';
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($parameters);
+        $results = [];
+        while ($data = $statement->fetch()) {
+           $results[] = [
+            'category' => $data['category'],
+            'value' => (int)$data['total_value'] / 100,];
+        }
+        return $results;
     }
 
     public function averageAmountsByCategory(array $criteria): array
     {
-        // TODO: Implement averageAmountsByCategory() method.
-        return [];
+        $where = [];
+        $parameters = [];
+        foreach ($criteria as $key => $value) {
+            if($key === 'year'){
+                $where[]= 'strftime("%Y", date) = :year';
+                $parameters['year'] =(string) $value;
+            }elseif($key === 'month'){
+                $monthPadded = str_pad((string)$value, 2, '0', STR_PAD_LEFT);
+                $where[]= 'strftime("%m", date) = :month';
+                $parameters['month'] = $monthPadded;;
+            }else {
+                $where[]= "$key = :$key";
+                $parameters[$key] = $value;
+            }
+        }
+
+        $query = 'SELECT category, AVG(amount_cents) AS average_value FROM expenses';
+        if(!empty($where)){
+            $query .= ' WHERE '.implode(' AND ', $where);
+        }
+        $query .= ' GROUP BY category ORDER BY average_value DESC';
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($parameters);
+        $results = [];
+        while ($data = $statement->fetch()) {
+            $results[] = [
+                'category' => $data['category'],
+                'value' => (int)$data['average_value'] / 100,
+            ];
+        }
+        return $results;
     }
 
     public function sumAmounts(array $criteria): float
     {
-        // TODO: Implement sumAmounts() method.
-        return 0;
+        $where = [];
+        $parameters = [];
+        foreach ($criteria as $key => $value) {
+            if($key === 'year'){
+                $where[]= 'strftime("%Y", date) = :year';
+                $parameters['year'] =(string) $value;
+            }elseif($key === 'month'){
+                $monthPadded = str_pad((string)$value, 2, '0', STR_PAD_LEFT);
+                $where[]= 'strftime("%m", date) = :month';
+                $parameters['month'] = $monthPadded;;
+            }else {
+                $where[]= "$key = :$key";
+                $parameters[$key] = $value;
+            }
+        }
+        $query = 'SELECT SUM(amount_cents) as total_value FROM expenses';
+        if (!empty($where)) {
+            $query .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($parameters);
+
+        $result = $statement->fetchColumn();
+        return $result ? (float)$result / 100 : 0.0;
     }
 
     /**

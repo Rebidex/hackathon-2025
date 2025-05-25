@@ -29,5 +29,5 @@ interface ExpenseRepositoryInterface
     public function averageAmountsByCategory(array $criteria): array;
 
     public function sumAmounts(array $criteria): float;
-
+    public function getAvailableYears(int $userId):array;
 }
